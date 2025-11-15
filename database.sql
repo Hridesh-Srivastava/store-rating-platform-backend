@@ -1,7 +1,3 @@
--- Using UUID for all IDs (Supabase best practice) instead of SERIAL integers
--- Added email field to stores table as per requirements
--- Changed role constraint to match specific role values
-
 CREATE TABLE users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(60) NOT NULL,
@@ -35,7 +31,6 @@ CREATE TABLE ratings (
   UNIQUE(user_id, store_id)
 );
 
--- Create indices for performance
 CREATE INDEX idx_stores_owner_id ON stores(owner_id);
 CREATE INDEX idx_ratings_user_id ON ratings(user_id);
 CREATE INDEX idx_ratings_store_id ON ratings(store_id);
