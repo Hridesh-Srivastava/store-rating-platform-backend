@@ -47,12 +47,10 @@ export const getAllStores = async (req, res) => {
       .from('stores')
       .select('id, name, address, owner_id, email');
 
-    // Apply search filter
     if (search) {
       query = query.or(`name.ilike.%${search}%,address.ilike.%${search}%`);
     }
 
-    // Apply sorting
     if (sortBy === 'address') {
       query = query.order('address', { ascending: true });
     } else {
@@ -65,7 +63,6 @@ export const getAllStores = async (req, res) => {
       return res.status(500).json({ error: 'Failed to fetch stores' });
     }
 
-    // Calculate ratings for each store
     const storesWithRatings = await Promise.all(
       stores.map(async (store) => {
         const { data: ratings, error: ratingError } = await supabase
@@ -74,10 +71,15 @@ export const getAllStores = async (req, res) => {
           .eq('store_id', store.id);
 
         const totalRatings = ratings?.length || 0;
-        const averageRating =
-          totalRatings > 0
-            ? (ratings.reduce((sum, r) => sum + r.rating, 0) / totalRatings).toFixed(1)
-            : 0;
+        let averageRating = 0;
+        
+        if (totalRatings > 0) {
+          let sum = 0;
+          for (const r of ratings) {
+            sum += r.rating;
+          }
+          averageRating = (sum / totalRatings).toFixed(1);
+        }
 
         return {
           ...store,
@@ -87,7 +89,6 @@ export const getAllStores = async (req, res) => {
       })
     );
 
-    // Sort by rating if requested
     if (sortBy === 'rating') {
       storesWithRatings.sort((a, b) => b.average_rating - a.average_rating);
     }
@@ -113,17 +114,21 @@ export const getStoreById = async (req, res) => {
       return res.status(404).json({ error: 'Store not found' });
     }
 
-    // Get ratings for this store
     const { data: ratings, error: ratingError } = await supabase
       .from('ratings')
       .select('rating')
       .eq('store_id', id);
 
     const totalRatings = ratings?.length || 0;
-    const averageRating =
-      totalRatings > 0
-        ? (ratings.reduce((sum, r) => sum + r.rating, 0) / totalRatings).toFixed(1)
-        : 0;
+    let averageRating = 0;
+    
+    if (totalRatings > 0) {
+      let ratingSum = 0;
+      for (let i = 0; i < ratings.length; i++) {
+        ratingSum += ratings[i].rating;
+      }
+      averageRating = (ratingSum / totalRatings).toFixed(1);
+    }
 
     res.json({
       ...store,

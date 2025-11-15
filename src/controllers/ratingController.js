@@ -8,8 +8,6 @@ export const submitRating = async (req, res) => {
     if (rating < 1 || rating > 5) {
       return res.status(400).json({ error: 'Rating must be between 1 and 5' });
     }
-
-    // Check if rating exists
     const { data: existingRating } = await supabase
       .from('ratings')
       .select('id')
@@ -18,7 +16,6 @@ export const submitRating = async (req, res) => {
       .single();
 
     if (existingRating) {
-      // Update existing rating
       const { error: updateError } = await supabase
         .from('ratings')
         .update({ rating })
@@ -83,7 +80,7 @@ export const getStoreRatings = async (req, res) => {
 
     const { data: ratings, error } = await supabase
       .from('ratings')
-      .select('id, rating, created_at, updated_at, users(name)')
+      .select('id, rating, created_at, updated_at, users(name, email)')
       .eq('store_id', storeId)
       .order('created_at', { ascending: false });
 
@@ -91,13 +88,13 @@ export const getStoreRatings = async (req, res) => {
       return res.status(500).json({ error: 'Failed to fetch ratings' });
     }
 
-    // Flatten the response
     const formattedRatings = ratings.map((r) => ({
       id: r.id,
       rating: r.rating,
       created_at: r.created_at,
       updated_at: r.updated_at,
-      name: r.users?.name,
+      user_name: r.users?.name || 'Unknown',
+      user_email: r.users?.email || '-',
     }));
 
     res.json(formattedRatings);

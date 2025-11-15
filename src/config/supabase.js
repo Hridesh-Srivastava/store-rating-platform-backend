@@ -15,7 +15,6 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
   },
 });
 
-// Client-side version (for frontend - use ANON key)
 export const createSupabaseClient = () => {
   return createClient(
     process.env.VITE_SUPABASE_URL,
